@@ -13,7 +13,7 @@ match_data = data[data['match_id'] == match_id]
 match_data['elapsed_time'] = pd.to_datetime(match_data['elapsed_time'], format='%H:%M:%S')
 
 # 计算得分差
-match_data['score_diff'] = match_data['p1_points_won'] - match_data['p2_points_won']
+match_data['score_diff'] = match_data['p1_score'] - match_data['p2_score']
 
 # 绘制折线图
 plt.figure(figsize=(14, 7))

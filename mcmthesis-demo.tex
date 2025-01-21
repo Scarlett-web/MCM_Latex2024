@@ -67,6 +67,7 @@
 \usepackage{tabularray}
 \usepackage{caption} % for table caption
 \usepackage{tocloft}
+\usepackage{hyperref}
 \setlength{\cftbeforesecskip}{6pt}
 \renewcommand{\contentsname}{\hspace*{\fill}\Large\bfseries Contents \hspace*{\fill}}
 
@@ -207,7 +208,6 @@ conditioning on a physiological level.
 \end{itemize}
 \section{List of Notation}
 
-
 \begin{table}[h]
   \centering
   \begin{tblr}{
@@ -276,6 +276,102 @@ Therefore, the data is correct.
 \end{itemize}
 
 \section{Task1: Captures the Flow of Play}
+\subsection{Soecifying Conceptual Significance}
+Since a relatively large number of concepts are introduced in our model, we first identify
+and clarify the meaning of the introduced concepts here.
+\begin{itemize}
+  \item \textbf{Short-term Motivation} refers to a brief period of above-average performance by a player
+  following a motivating event.
+  \item \textbf{Confidence Boost} is when a player, drawing upon their self-awareness developed through
+  multiple games in their professional career and an assessment of the current situation,
+  generates positive expectations regarding the outcome of the match.
+  \item \textbf{Serve Success Rate} is probability of scoring in a service game.
+  \item \textbf{Winning Probability} is the likelihood of the player winning the game/set/match.
+  \item \textbf{Leverage} measures how a ball’s outcome impacts the margin of victory.
+  \item \textbf{Momentum} aims to describe which player is in control at any given point in the
+  match—based on who is currently winning more points and who is prevailing in crucial
+  (high-leverage) moments. It is defined as a player’s exponentially weighted leverage
+  average.\par
+  At each point in the match, both competing players will have their own momentum values.
+  \item We define the fluctuations in momentum as the \textbf{Flow of Play.}
+\end{itemize}
+The relationship between the above concepts, i.e., the framework of the model, 
+is shown schematically below, and in the following we show the model building process in full.
+\subsection{Leverage Quantitative Momentum Capture Model}
+\subsubsection{Impact of Short-term Motivation and Confidence Boost on Serve Success Rate}
+\textbf{Short-term Motivation} refers to a brief period of above-average performance by a player
+following a motivating event (e.g., a breaking serve) during a match, a phenomenon known
+in sports as "hot hands". We developed a probabilistic model that quantifies Short-term
+Motivation as an increase in serve success rate.\par
+The following two assumptions are necessary:
+\begin{itemize}
+  \item When a player wins a point, he experiences a short-term "motivational" effect that increases
+  the probability of winning the next point.
+  \item Lifting effects are cumulative. A string of successes may have a positive psychological
+  and emotional effect on a player, so that a player winning more points in a row will result
+  in a greater probability of winning the next point on serve.
+\end{itemize}
+Here $i$ denotes the number of consecutive points scored by a player $A$ or his opponent $B$;
+and $m_i$ denotes the increase in the rate of serving points on a player’s next serve after winning
+$i$points consecutively due to the short-term motivation gained. Then, the probability of winning
+the next serve under short-term motivation $p_s$ versus $q_s$ is calculated by \eqref{eq01}.
+\begin{equation}
+  \begin{split}
+    p_s &= p_f(1+m_i^A);\\
+    q_s &= q_f(1+m_i^B),
+  \end{split}
+  \label{eq01}
+\end{equation}
+where $p_f$ and $q_f$ are the scoring probabilities before player $A$ and player $B$ are motivated,
+respectively.\par
+The short-term motivation that a player receives for scoring a game $n$ times in a row is
+referred to as $n$-order short-term motivation. Using the dataset given in the title, we statistically
+obtained a plot of the total number of short-term motivations occurring in a match versus order,
+and the results are shown in Figure 4. It is clear to see that short-term motivations of order four
+and above rarely occur in the dataset used in this study. Therefore, only short-term motivations
+of order three and below are considered in this paper.\par
+Short-termmotivation focuses on short-termstatus enhancement during matches and ignores
+sources of motivation on a longer time scale in the player’s lifetime, so we continue to introduce
+a \textbf{confidence-boosting factor}.\par
+A new tuning parameter $\lambda$ is introduced, which represents the effect of the confidence
+boosting factor on the success rate of the next serve, the probabilities after the effect are
+expressed as $p_s$ and $q_s$ – see equation \eqref{eq02}
+\begin{equation}
+  \begin{split}
+    p_c = \frac{T_{AB}}{\lambda} p_t + \left(1 - \frac{T_{AB}}{\lambda}\right) p_0;\\
+  q_c = \frac{T_{AB}}{\lambda} q_t + \left(1 - \frac{T_{AB}}{\lambda}\right) q_0,
+  \end{split}
+  \label{eq02}
+\end{equation}
+where $T_{AB}$ denotes the cumulative total score of the opposing players since the start of the
+match, and $p_t$ and $q_t$ denote the probability of scoring for player $A$ and player $B$, respectively,
+since the start of the match up to the present. $p_0$ and $q_0$ denote the historical data on the success
+rate of the opposing teams’ serves on the grass court surface prior to the current match (source:
+\url{https://www.infosys.com/})\par
+Eq. (2) describes the phenomenon that a player’s historical results always have the greatest
+impact on player status at the start of a match, and then diminish as the match progresses - the
+performance of the current match begins to influence player play more.\par
+We then performed a linear interpolation of the obtained probabilities. The interpolation
+coefficient is the cumulative total score of the current pair divided by the coefficient $\lambda$ (i.e.$\frac{T_{AB}}{\lambda}$).\par
+The short-term motivation is fluctuating as the match progresses, while the confidence boost
+takes into account the player’s self-perception established over the course of his career as well
+as the current situation in the match, which is the "undertone" of the motivated state, therefore,
+we use $pc$ and $qc$ in Eq. \eqref{eq02} instead of $p_f$ and $q_f$ in Eq. \eqref{eq01}, we can get the success rate of the
+next serve after considering the short-term motivation and confidence improvement:
+\begin{equation*}
+  \begin{split}
+    p = \left[ \frac{T_{AB}}{\lambda} \cdot p_c + \left( 1 - \frac{T_{AB}}{\lambda} \right) p_t \right] (1 + m_i^A);\\
+    q = \left[ \frac{T_{AB}}{\lambda} \cdot q_c + \left( 1 - \frac{T_{AB}}{\lambda} \right) q_t \right] (1 + m_i^B).
+  \end{split}
+\end{equation*}
+The above equation shows the effect of short-term motivation and confidence enhancement
+on serve percentage.\par
+In tennis matches, players typically have an advantage when serving. According to the
+data we have collected, the serving success rate of professional players exceeds $50\%$. Based
+on this understanding, \textbf{players gain confidence in serving games.} Due to this "confidence
+boost," we have incorporated the player’s performance in serving games into consideration in
+our model.
+\subsubsection{Monte Carlo Simulation for Winning Probability}
 \begin{center}
 \begin{tabular}{clc}
 {\bf Symbols} & {\bf Description} & \quad {\bf Unit} \\[0.25cm]
